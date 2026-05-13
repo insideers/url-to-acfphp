@@ -5,8 +5,6 @@ export default function Home() {
   const [url, setUrl] = useState('');
   const [context, setContext] = useState('');
   const [images, setImages] = useState([]);
-  const [includeContent, setIncludeContent] = useState(true);
-  const [includeComments, setIncludeComments] = useState(true);
   const [messages, setMessages] = useState([]);
   const [blocks, setBlocks] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -96,7 +94,7 @@ export default function Home() {
         const genRes = await fetch('/api/generate-block', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ section, includeContent, includeComments })
+          body: JSON.stringify({ section })
         });
 
         const genData = await genRes.json();
@@ -131,11 +129,14 @@ export default function Home() {
   };
 
   const downloadAll = () => {
+    // Single combined ACF JSON with all field groups
+    const combined = blocks.map(b => b.acf_json);
+    downloadFile('acf-field-groups.json', JSON.stringify(combined, null, 2), 'application/json');
+    // Individual PHP files
     blocks.forEach((block, i) => {
       setTimeout(() => {
         downloadFile(`${block.section.slug}.php`, block.php, 'text/plain');
-        downloadFile(`${block.section.slug}.json`, JSON.stringify(block.acf_json, null, 2), 'application/json');
-      }, i * 350);
+      }, i * 200);
     });
   };
 
@@ -210,18 +211,6 @@ export default function Home() {
             </div>
 
             <div className="section">
-              <h3>⚙️ Opciones</h3>
-              <label className="checkbox-label">
-                <input type="checkbox" checked={includeContent} onChange={e => setIncludeContent(e.target.checked)} />
-                Incluir textos reales en comentarios PHP
-              </label>
-              <label className="checkbox-label" style={{ marginTop: 8 }}>
-                <input type="checkbox" checked={includeComments} onChange={e => setIncludeComments(e.target.checked)} />
-                Añadir comentarios al PHP
-              </label>
-            </div>
-
-            <div className="section">
               <button className="btn btn-primary" onClick={analyze} disabled={loading}>
                 {loading ? '⏳ Analizando...' : '⚡ Analizar y Generar Bloques'}
               </button>
@@ -272,7 +261,7 @@ export default function Home() {
             {blocks.length > 0 && (
               <div className="results-bar">
                 <span className="tag tag-green">✅ {blocks.length} bloques generados</span>
-                <button className="btn btn-sm btn-outline" onClick={downloadAll}>⬇ Descargar todo</button>
+                <button className="btn btn-sm btn-outline" onClick={downloadAll}>⬇ PHP + JSON único</button>
               </div>
             )}
           </main>

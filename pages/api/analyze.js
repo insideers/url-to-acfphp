@@ -79,13 +79,17 @@ Lista TODAS las secciones distintas de esta web. Para cada sección devuelve un 
     ],
     "hasRepeater": false,
     "repeaterField": null,
-    "repeaterSubFields": null,
-    "sampleContent": {
-      "title": "Texto real del título visto en la web",
-      "subtitle": "Texto real del subtítulo"
-    }
+    "repeaterSubFields": null
   }
 ]
+
+REGLAS IMPORTANTES para los nombres de bloques:
+- Usa nombres GENÉRICOS y REUTILIZABLES, no específicos del contenido
+- CORRECTO: hero-shot, features, testimonials, logo-row, stats, faq, banner, cta, pricing, team, contact
+- INCORRECTO: value-proposition, key-benefits, solar-advantages, product-highlights (demasiado específicos)
+- Piensa en el PATRÓN visual/estructural, no en el contenido concreto
+- Una sección de "Key Benefits" es estructuralmente un "features" → úsalo
+- Una sección de "Why Us" / "Value Proposition" suele ser un "banner" o "features" → elige el más apropiado
 
 Para secciones con listas de items (features, FAQs, testimonials, logos, etc.) usa hasRepeater: true y define repeaterField con el nombre del repeater y repeaterSubFields con sus campos.
 SOLO el JSON array, sin markdown ni explicación.`

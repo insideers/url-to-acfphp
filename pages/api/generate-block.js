@@ -40,10 +40,9 @@ export default async function handler(req, res) {
 
 ${JSON.stringify(section, null, 2)}
 
-Instrucciones adicionales:
+Instrucciones:
 - Keys únicas: "group_" + 8 hex chars y "field_" + 8 hex chars
-${includeContent ? '- Menciona los textos de sampleContent en comentarios PHP' : ''}
-${includeComments ? '- Añade comentarios PHP breves útiles' : '- Sin comentarios PHP'}
+- Sin comentarios PHP de ningún tipo
 - hasRepeater=true → usa while(have_rows())
 - Post objects → foreach + setup_postdata + wp_reset_postdata
 
