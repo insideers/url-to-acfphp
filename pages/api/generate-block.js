@@ -47,55 +47,40 @@ REGLAS CRÍTICAS:
 - Sin comentarios PHP
 - hasRepeater=true → while(have_rows(repeaterField)) con todos los sub_fields
 - Post objects → foreach + setup_postdata + wp_reset_postdata
-- background_video o background_image → aplícalos como atributo style o src en la <section> o wrapper
-- Dos botones (button_text + button_2_text) → renderiza ambos dentro del mismo button-container
+- background_video o background_image → aplícalos como style en la <section>
+- Dos botones → renderiza ambos dentro del mismo button-container
 - number/stat fields → renderízalos con su label correspondiente
 
-FORMATO DE RESPUESTA — MUY IMPORTANTE:
-El valor de "php" debe ser un string JSON válido. Usa \\n para saltos de línea y \\" para comillas dentro del PHP.
-Devuelve SOLO este JSON sin markdown ni bloques de código:
-{"acf_json": {...}, "php": "<?php ... código PHP con \\n para saltos de línea ..."}`
+Responde usando EXACTAMENTE este formato con las etiquetas XML:
+
+<acf_json>
+{ ...JSON del field group aquí... }
+</acf_json>
+
+<php>
+<?php ...código PHP aquí... ?>
+</php>`
       }]
     });
 
     const raw = response.content[0].text;
-    let blockData;
 
-    // Clean markdown fences
-    const clean = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    // Extract using XML tags — avoids all JSON escaping issues with PHP code
+    const acfMatch = raw.match(/<acf_json>\s*([\s\S]*?)\s*<\/acf_json>/);
+    const phpMatch = raw.match(/<php>\s*([\s\S]*?)\s*<\/php>/);
 
-    try {
-      blockData = JSON.parse(clean);
-    } catch (e) {
-      // Try to extract acf_json and php separately with regex
-      // since PHP content with quotes often breaks standard JSON.parse
-      try {
-        const acfMatch = clean.match(/"acf_json"\s*:\s*(\{[\s\S]*?\})\s*,\s*"php"/);
-        const phpMatch = clean.match(/"php"\s*:\s*"([\s\S]*?)"\s*\}?\s*$/);
-
-        if (acfMatch && phpMatch) {
-          blockData = {
-            acf_json: JSON.parse(acfMatch[1]),
-            php: phpMatch[1].replace(/\\n/g, '\n').replace(/\\t/g, '\t').replace(/\\"/g, '"')
-          };
-        } else {
-          // Last resort: ask Claude to fix the JSON
-          const fixRes = await createWithRetry({
-            model: 'claude-sonnet-4-20250514',
-            max_tokens: 3000,
-            system: 'Eres un experto en JSON. Devuelve SOLO el JSON corregido y válido, sin markdown.',
-            messages: [{
-              role: 'user',
-              content: `Este JSON está mal formateado, corrígelo. El campo "php" debe tener el código PHP como string con escapes correctos (\\n para saltos, \\" para comillas dentro del string):\n\n${clean}`
-            }]
-          });
-          const fixedClean = fixRes.content[0].text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-          blockData = JSON.parse(fixedClean);
-        }
-      } catch (e2) {
-        throw new Error(`No se pudo parsear la respuesta del bloque: ${e2.message}`);
-      }
+    if (!acfMatch || !phpMatch) {
+      throw new Error('Respuesta del modelo con formato inesperado');
     }
+
+    let acf_json;
+    try {
+      acf_json = JSON.parse(acfMatch[1].trim());
+    } catch (e) {
+      throw new Error(`ACF JSON inválido: ${e.message}`);
+    }
+
+    const blockData = { acf_json, php: phpMatch[1].trim() };
 
     res.json(blockData);
 
