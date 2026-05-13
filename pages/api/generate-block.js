@@ -51,23 +51,49 @@ REGLAS CRÍTICAS:
 - Dos botones (button_text + button_2_text) → renderiza ambos dentro del mismo button-container
 - number/stat fields → renderízalos con su label correspondiente
 
-Devuelve SOLO este JSON sin markdown:
-{"acf_json": {...}, "php": "código PHP completo"}`
+FORMATO DE RESPUESTA — MUY IMPORTANTE:
+El valor de "php" debe ser un string JSON válido. Usa \\n para saltos de línea y \\" para comillas dentro del PHP.
+Devuelve SOLO este JSON sin markdown ni bloques de código:
+{"acf_json": {...}, "php": "<?php ... código PHP con \\n para saltos de línea ..."}`
       }]
     });
 
     const raw = response.content[0].text;
     let blockData;
+
+    // Clean markdown fences
+    const clean = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+
     try {
-      const clean = raw.replace(/```json|```/g, '').trim();
       blockData = JSON.parse(clean);
     } catch (e) {
-      const match = raw.match(/\{[\s\S]*\}/);
-      if (match) {
-        try { blockData = JSON.parse(match[0]); }
-        catch (e2) { throw new Error('No se pudo parsear la respuesta del bloque'); }
-      } else {
-        throw new Error('Respuesta inesperada del modelo');
+      // Try to extract acf_json and php separately with regex
+      // since PHP content with quotes often breaks standard JSON.parse
+      try {
+        const acfMatch = clean.match(/"acf_json"\s*:\s*(\{[\s\S]*?\})\s*,\s*"php"/);
+        const phpMatch = clean.match(/"php"\s*:\s*"([\s\S]*?)"\s*\}?\s*$/);
+
+        if (acfMatch && phpMatch) {
+          blockData = {
+            acf_json: JSON.parse(acfMatch[1]),
+            php: phpMatch[1].replace(/\\n/g, '\n').replace(/\\t/g, '\t').replace(/\\"/g, '"')
+          };
+        } else {
+          // Last resort: ask Claude to fix the JSON
+          const fixRes = await createWithRetry({
+            model: 'claude-sonnet-4-20250514',
+            max_tokens: 3000,
+            system: 'Eres un experto en JSON. Devuelve SOLO el JSON corregido y válido, sin markdown.',
+            messages: [{
+              role: 'user',
+              content: `Este JSON está mal formateado, corrígelo. El campo "php" debe tener el código PHP como string con escapes correctos (\\n para saltos, \\" para comillas dentro del string):\n\n${clean}`
+            }]
+          });
+          const fixedClean = fixRes.content[0].text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+          blockData = JSON.parse(fixedClean);
+        }
+      } catch (e2) {
+        throw new Error(`No se pudo parsear la respuesta del bloque: ${e2.message}`);
       }
     }
 
