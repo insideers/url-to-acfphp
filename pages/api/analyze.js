@@ -64,17 +64,23 @@ Sé muy exhaustivo y detallado.`
       type: 'text',
       text: `${url ? `Web analizada: ${url}\n` : ''}${webContent ? `\nContenido detectado:\n${webContent}\n` : ''}${context ? `\nContexto del proyecto: ${context}\n` : ''}
 
-Lista TODAS las secciones distintas de esta web. Para cada sección devuelve un JSON array con este formato exacto:
+Analiza CADA sección de esta web con máximo detalle. Para cada sección identifica TODOS los elementos visuales y de contenido que contiene.
+
+Devuelve un JSON array con este formato:
 [
   {
     "slug": "hero-shot",
     "title": "Section - Hero Shot",
-    "description": "Descripción breve de la sección",
+    "description": "Descripción detallada de la sección",
     "fields": [
+      {"name": "page_name", "label": "Page Name", "type": "text"},
       {"name": "title", "label": "Title", "type": "text"},
       {"name": "subtitle", "label": "Subtitle", "type": "textarea"},
       {"name": "button_text", "label": "Button Text", "type": "text"},
       {"name": "button_link", "label": "Button Link", "type": "url"},
+      {"name": "button_2_text", "label": "Button 2 Text", "type": "text"},
+      {"name": "button_2_link", "label": "Button 2 Link", "type": "url"},
+      {"name": "background_video", "label": "Background Video", "type": "file"},
       {"name": "image", "label": "Image", "type": "image"}
     ],
     "hasRepeater": false,
@@ -83,15 +89,23 @@ Lista TODAS las secciones distintas de esta web. Para cada sección devuelve un 
   }
 ]
 
-REGLAS IMPORTANTES para los nombres de bloques:
-- Usa nombres GENÉRICOS y REUTILIZABLES, no específicos del contenido
-- CORRECTO: hero-shot, features, testimonials, logo-row, stats, faq, banner, cta, pricing, team, contact
-- INCORRECTO: value-proposition, key-benefits, solar-advantages, product-highlights (demasiado específicos)
-- Piensa en el PATRÓN visual/estructural, no en el contenido concreto
-- Una sección de "Key Benefits" es estructuralmente un "features" → úsalo
-- Una sección de "Why Us" / "Value Proposition" suele ser un "banner" o "features" → elige el más apropiado
+REGLAS CRÍTICAS para los campos — sé EXHAUSTIVO:
+- Incluye TODOS los elementos de texto visibles: pre-títulos, títulos, subtítulos, body copy, labels
+- Si hay UN botón → button_text + button_link
+- Si hay DOS botones → button_text + button_link + button_2_text + button_2_link
+- Si hay imagen de fondo → background_image (type: image)
+- Si hay video de fondo → background_video (type: file)
+- Si hay imagen lateral o decorativa → image (type: image)
+- Si hay icono SVG o icono por item → icon (type: image) dentro del repeater
+- Estadísticas numéricas → number (type: text) + label (type: text)
+- Para repeaters define TODOS los sub_fields que tiene cada item (icono, título, texto, link...)
+- No te dejes ningún elemento visual sin su campo correspondiente
 
-Para secciones con listas de items (features, FAQs, testimonials, logos, etc.) usa hasRepeater: true y define repeaterField con el nombre del repeater y repeaterSubFields con sus campos.
+REGLAS para nombres de bloques — usa nombres GENÉRICOS:
+- CORRECTO: hero-shot, features, testimonials, logo-row, stats, faq, banner, cta, pricing, team, contact, slider
+- INCORRECTO: value-proposition, key-benefits, why-us (demasiado específicos)
+- "Key Benefits" → features, "Why Us" → banner, "Our Numbers" → stats
+
 SOLO el JSON array, sin markdown ni explicación.`
     });
 

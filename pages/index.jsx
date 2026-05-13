@@ -80,14 +80,11 @@ export default function Home() {
         return copy;
       });
 
-      // Step 2: generate each block — with delay to avoid rate limits
+      // Step 2: generate each block
       const generated = [];
       for (let i = 0; i < sections.length; i++) {
         const section = sections[i];
         setStatus(`Generando ${i + 1}/${sections.length}: ${section.slug}`);
-
-        // 5s delay between blocks (except first)
-        if (i > 0) await new Promise(r => setTimeout(r, 5000));
 
         addMsg('assistant', `<span class="dots"><span>●</span><span>●</span><span>●</span></span> <small style="color:#6b6b80">${section.title}</small>`);
 

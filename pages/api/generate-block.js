@@ -36,15 +36,20 @@ export default async function handler(req, res) {
       system: GENERATE_SYSTEM + '\n\n' + PHP_EXAMPLES,
       messages: [{
         role: 'user',
-        content: `Genera el JSON de ACF y el PHP para esta sección:
+        content: `Genera el JSON de ACF y el PHP para esta sección WordPress:
 
 ${JSON.stringify(section, null, 2)}
 
-Instrucciones:
-- Keys únicas: "group_" + 8 hex chars y "field_" + 8 hex chars
-- Sin comentarios PHP de ningún tipo
-- hasRepeater=true → usa while(have_rows())
+REGLAS CRÍTICAS:
+- Genera un campo ACF por CADA elemento en "fields" — no omitas ninguno
+- El PHP debe renderizar CADA campo de "fields" — no te dejes ninguno
+- Keys únicas: "group_" + 8 hex random y "field_" + 8 hex random
+- Sin comentarios PHP
+- hasRepeater=true → while(have_rows(repeaterField)) con todos los sub_fields
 - Post objects → foreach + setup_postdata + wp_reset_postdata
+- background_video o background_image → aplícalos como atributo style o src en la <section> o wrapper
+- Dos botones (button_text + button_2_text) → renderiza ambos dentro del mismo button-container
+- number/stat fields → renderízalos con su label correspondiente
 
 Devuelve SOLO este JSON sin markdown:
 {"acf_json": {...}, "php": "código PHP completo"}`
